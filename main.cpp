@@ -1,6 +1,5 @@
 //
 //  main.cpp
-//  bioio
 //
 //  Created by Daniel Cooke on 13/10/2014.
 //  Copyright (c) 2014 Oxford University. All rights reserved.
@@ -21,6 +20,10 @@ using std::string;
 using std::cout;
 using std::endl;
 using std::size_t;
+
+/*=======================================================================================
+READ tests: a number of ways to read a FASTA file in C++
+ =======================================================================================*/
 
 void test_it(string ref_path)
 {
@@ -226,7 +229,7 @@ void test_bioio(string ref_path)
     cout << "bioio: " << elapsed.count() << endl;
 }
 
-int main(int argc, const char * argv[])
+void performance_tests()
 {
     //string ref_path {"/Users/dcooke/Genomics/References/human_g1k_v37.fasta"};
     string ref_path {"/Users/dcooke/Genomics/References/R00000042.fasta"};
@@ -245,18 +248,45 @@ int main(int argc, const char * argv[])
     test_buff(ref_path);
     
     test_bioio(ref_path);
+}
+
+/*=======================================================================================
+ Examples: some examples of using bioio
+ =======================================================================================*/
+
+void test_read_fasta(string ref_path,  string fasta_path)
+{   
+    auto ref  = bioio::read_reference_seq<>(ref_path); // default std::string
+    auto ref1 = bioio::read_reference_seq<std::vector<char>>(ref_path);
+    auto ref2 = bioio::read_reference_seq<>(ref_path, 10000, 20000);
     
-    // string fasta_path {"/Users/dcooke/Genomics/Nanopore/Data/tranche1/processed/m1/fastq/R7_tranche1_m1_template.fa"};
-    // string fastq_path {"/Users/dcooke/Genomics/Nanopore/Data/lambdaR7/m1/raw_reads/template.fq"};
-    //
-    // for (auto& read : bioio::read_fastq(fastq_path)) {
-    //     cout << read.seq << endl;
+    auto reads  = bioio::read_fasta<>(fasta_path);
+    
+    auto read_map  = bioio::read_fasta_map<>(fasta_path);
+    // Can pass lambda to strip discription off read id.
+    auto read_map2 = bioio::read_fasta_map<>(fasta_path, [] (std::string id) { return id.substr(0, id.find(' ')); });
+    
+    // for (auto& id : read_map2.first) {
+    //     cout << id << '\n' << read_map2.second.at(id) << endl;
     // }
-    //
+}
+
+void test_read_fastq(string fastq_path)
+{
     // auto reads = bioio::read_fastq_map<>(fastq_path);
     // for (auto& id : reads.first) {
     //     cout << id << '\n' << reads.second.at(id).first << endl;
     // }
+}
+
+int main(int argc, const char * argv[])
+{   
+    string ref_path {"/Users/dcooke/Genomics/References/R00000042.fasta"};
+    string fasta_path {"/Users/dcooke/Genomics/Nanopore/Data/tranche1/processed/m1/fastq/R7_tranche1_m1_template.fa"};
+    string fastq_path {"/Users/dcooke/Genomics/Nanopore/Data/lambdaR7/m1/raw_reads/template.fq"};
+    
+    test_read_fasta(ref_path, fasta_path);
+    test_read_fastq(fastq_path);
     
     return 0;
 }

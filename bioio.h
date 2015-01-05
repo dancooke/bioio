@@ -255,7 +255,7 @@ std::vector<T> read_fasta_seqs(std::string path)
 	@note
  */
 template<typename T1=std::string, typename T2=std::string>
-std::vector<FastaRecord<T1, T2>> read_fasta_seqs(std::string path)
+std::vector<FastaRecord<T1, T2>> read_fasta(std::string path)
 {
     std::ifstream fasta(path, std::ios::binary);
     std::vector<FastaRecord<T1, T2>> seqs;
