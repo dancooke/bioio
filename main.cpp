@@ -14,6 +14,9 @@
 #include <iterator>
 #include <cstdio>
 
+#include <seqan/sequence.h>
+#include <seqan/seq_io.h>
+
 #include "bioio.h"
 
 using std::string;
@@ -220,6 +223,7 @@ void test_bioio(string ref_path)
     auto start = std::chrono::system_clock::now();
     
     string seq = bioio::read_reference_seq(ref_path);
+    cout << seq.length() << endl;
     
     auto end = std::chrono::system_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -229,25 +233,43 @@ void test_bioio(string ref_path)
     cout << "bioio: " << elapsed.count() << endl;
 }
 
+void test_seqan(string ref_path)
+{
+    auto start = std::chrono::system_clock::now();
+    
+    seqan::CharString id;
+    seqan::Dna5String seq;
+    
+    seqan::SequenceStream seqStream(ref_path.c_str());
+    readRecord(id, seq, seqStream);
+    cout << id << '\t' << length(seq) << endl;
+    
+    auto end = std::chrono::system_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    cout << "seqan: " << elapsed.count() << endl;
+}
+
 void performance_tests()
 {
     //string ref_path {"/Users/dcooke/Genomics/References/human_g1k_v37.fasta"};
     string ref_path {"/Users/dcooke/Genomics/References/R00000042.fasta"};
     //string ref_path {"/Users/dcooke/Genomics/References/lambda_ref.fasta"};
     
-    test_it(ref_path);
-    
-    test_get(ref_path);
-    
-    test_c_get(ref_path);
-    
-    test_remove(ref_path);
-    
-    test_maybe_remove(ref_path);
-    
-    test_buff(ref_path);
+    // test_it(ref_path);
+    //
+    // test_get(ref_path);
+    //
+    // test_c_get(ref_path);
+    //
+    // test_remove(ref_path);
+    //
+    // test_maybe_remove(ref_path);
+    //
+    // test_buff(ref_path);
     
     test_bioio(ref_path);
+    
+    test_seqan(ref_path);
 }
 
 /*=======================================================================================
@@ -281,6 +303,8 @@ void test_read_fastq(string fastq_path)
 
 int main(int argc, const char * argv[])
 {   
+    performance_tests();
+    
     string ref_path {"/Users/dcooke/Genomics/References/R00000042.fasta"};
     string fasta_path {"/Users/dcooke/Genomics/Nanopore/Data/tranche1/processed/m1/fastq/R7_tranche1_m1_template.fa"};
     string fastq_path {"/Users/dcooke/Genomics/Nanopore/Data/lambdaR7/m1/raw_reads/template.fq"};

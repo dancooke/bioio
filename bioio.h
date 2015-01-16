@@ -15,17 +15,12 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
-#include <exception>
 
 namespace bioio {
 
 /*=======================================================================================
  TYPEDEFS
  =======================================================================================*/
-
-using ReadId     = std::string;
-using DnaString  = std::string;
-using QualString = std::string;
 
 template<typename T1=std::string, typename T2=std::string>
 struct FastaRecord
@@ -113,7 +108,8 @@ T read_reference_seq(std::string path)
 	@note
  */
 template<typename T1=std::string, typename T2=std::string>
-FastaRecord<T1, T2> read_reference(std::string path)
+FastaRecord<T1, T2>
+read_reference(std::string path)
 {
     std::ifstream fasta(path, std::ios::binary | std::ios::ate);
     T1 id;
@@ -131,7 +127,7 @@ FastaRecord<T1, T2> read_reference(std::string path)
 	@param  path    FASTA file path.
     @param  start   Substring start index.
     @param  end     Substring end index.
-	@return A substring of a DNA sequence.
+    @return A substring of a DNA sequence.
  */
 template<typename T=std::string>
 T read_reference_seq(std::string path, std::size_t start, std::size_t end)
@@ -157,7 +153,8 @@ T read_reference_seq(std::string path, std::size_t start, std::size_t end)
 	@return Header and a substring of a DNA sequence.
  */
 template<typename T1=std::string, typename T2=std::string>
-FastaRecord<T1, T2> read_reference(std::string path, std::size_t start, std::size_t end)
+FastaRecord<T1, T2>
+read_reference(std::string path, std::size_t start, std::size_t end)
 {
     if (start > end) {
         std::cout << "warning: start > end." << std::endl;
@@ -190,6 +187,12 @@ int write_reference(std::string path, const FastaRecord<T1, T2>& data)
     return 1;
 }
 
+std::unordered_map<std::string, size_t>
+read_faix(std::string path)
+{
+    
+}
+
 /*=======================================================================================
  FASTA: For reading multiple record Fasta files.
  =======================================================================================*/
@@ -199,7 +202,8 @@ int write_reference(std::string path, const FastaRecord<T1, T2>& data)
  @return    A FastaRecord
  */
 template<typename T1=std::string, typename T2=std::string>
-FastaRecord<T1, T2> read_fasta_record(std::ifstream& fasta)
+FastaRecord<T1, T2>
+read_fasta_record(std::ifstream& fasta)
 {
     T1 id;
     std::getline(fasta, id); // id always a single line
@@ -235,7 +239,8 @@ FastaRecord<T1, T2> read_fasta_record(std::ifstream& fasta)
 	@note
  */
 template<typename T=std::string>
-std::vector<T> read_fasta_seqs(std::string path)
+std::vector<T>
+read_fasta_seqs(std::string path)
 {
     std::ifstream fasta(path, std::ios::binary);
     std::vector<T> seqs;
@@ -255,7 +260,8 @@ std::vector<T> read_fasta_seqs(std::string path)
 	@note
  */
 template<typename T1=std::string, typename T2=std::string>
-std::vector<FastaRecord<T1, T2>> read_fasta(std::string path)
+std::vector<FastaRecord<T1, T2>>
+read_fasta(std::string path)
 {
     std::ifstream fasta(path, std::ios::binary);
     std::vector<FastaRecord<T1, T2>> seqs;
@@ -275,7 +281,8 @@ std::vector<FastaRecord<T1, T2>> read_fasta(std::string path)
 	@note
  */
 template <typename T1=std::string, typename T2=std::string, typename F>
-FastaReads<T1, T2> read_fasta_map(std::string path, F f)
+FastaReads<T1, T2>
+read_fasta_map(std::string path, F f)
 {
    std::ifstream fasta(path, std::ios::binary);
    FastaMap<T1, T2> records;
@@ -285,7 +292,7 @@ FastaReads<T1, T2> read_fasta_map(std::string path, F f)
    ids.reserve(num_records);
    while (num_records) {
        auto record = read_fasta_record<T1, T2>(fasta);
-       auto f_id = f(std::move(record.id));
+       auto f_id = f(record.id);
        records.emplace(f_id, std::move(record.seq));
        ids.insert(std::move(f_id));
        --num_records;
@@ -299,9 +306,10 @@ FastaReads<T1, T2> read_fasta_map(std::string path, F f)
 	@note
  */
 template<typename T1=std::string, typename T2=std::string>
-inline FastaReads<T1, T2> read_fasta_map(std::string path)
+FastaReads<T1, T2>
+read_fasta_map(std::string path)
 {
-    return read_fasta_map(path, [] (ReadId id) { return id; });
+    return read_fasta_map(path, [] (T1 id) { return id; });
 }
 
 /*!	@function	Searches a Fasta file for the given record ids, after applying a string function
@@ -311,7 +319,8 @@ inline FastaReads<T1, T2> read_fasta_map(std::string path)
 	@note
  */
 template <typename T1=std::string, typename T2=std::string, typename F>
-FastaReads<T1, T2> read_fasta_map(std::string path, const ReadIds<T1>& ids, F f)
+FastaReads<T1, T2>
+read_fasta_map(std::string path, const ReadIds<T1>& ids, F f)
 {
    std::ifstream fasta(path, std::ios::binary);
    FastaMap<T1, T2> records;
@@ -321,7 +330,7 @@ FastaReads<T1, T2> read_fasta_map(std::string path, const ReadIds<T1>& ids, F f)
    f_ids.reserve(num_records);
    while (num_records) {
        auto record = read_fasta_record<T1, T2>(fasta);
-       auto f_id = f(std::move(record.id));
+       auto f_id = f(record.id);
        if (ids.find(f_id) != ids.end()) {
            records.emplace(f_id, std::move(record.seq));
            f_ids.insert(std::move(f_id));
@@ -337,9 +346,10 @@ FastaReads<T1, T2> read_fasta_map(std::string path, const ReadIds<T1>& ids, F f)
 	@note
  */
 template<typename T1=std::string, typename T2=std::string>
-inline FastaReads<T1, T2> read_fasta_map(std::string path, const ReadIds<T1>& ids)
+FastaReads<T1, T2>
+read_fasta_map(std::string path, const ReadIds<T1>& ids)
 {
-    return read_fasta_map(path, ids, [] (ReadId id) { return id; });
+    return read_fasta_map(path, ids, [] (T1 id) { return id; });
 }
 
 /*!	@function	Reads
@@ -371,7 +381,8 @@ int write_fasta(std::string path, const FastaReads<T1, T2>& data)
  @note
  */
 template<typename T1=std::string, typename T2=std::string, typename T3=std::string>
-FastqRecord<T1, T2, T3> read_fastq_record(std::ifstream& fastq)
+FastqRecord<T1, T2, T3>
+read_fastq_record(std::ifstream& fastq)
 {
     T1 id;
     T2 seq;
@@ -390,7 +401,8 @@ FastqRecord<T1, T2, T3> read_fastq_record(std::ifstream& fastq)
 	@note
  */
 template<typename T=std::string>
-std::vector<T> read_fastq_seqs(std::string path)
+std::vector<T>
+read_fastq_seqs(std::string path)
 {
     std::ifstream fastq(path, std::ios::binary);
     std::vector<T> seqs;
@@ -404,22 +416,24 @@ std::vector<T> read_fastq_seqs(std::string path)
 }
 
 /*!	@function	Reads
-	@param
-	@return
-	@note
+ @param
+ @return
+ @note
  */
-template<typename T1=std::string, typename T2=std::string, typename T3=std::string>
-std::vector<FastqRecord<T1, T2, T3>> read_fastq(std::string path)
+template<typename T1=std::string, typename T2=std::string, typename T3=std::string, typename F>
+std::vector<FastqRecord<T1, T2, T3>>
+read_fastq(std::string path, F f)
 {
-   std::ifstream fastq(path, std::ios::binary);
-   std::vector<FastqRecord<T1, T2, T3>> data;
-   std::size_t num_records = get_num_records(fastq, '@');
-   data.reserve(num_records);
-   while (num_records) {
-       data.push_back(read_fastq_record<T1, T2, T3>(fastq));
-       --num_records;
-   }
-   return data;
+    std::ifstream fastq(path, std::ios::binary);
+    std::vector<FastqRecord<T1, T2, T3>> data;
+    std::size_t num_records = get_num_records(fastq, '@');
+    data.reserve(num_records);
+    while (num_records) {
+        auto record = read_fastq_record<T1, T2, T3>(fastq);
+        data.emplace_back(f(record.id), std::move(record.seq), std::move(record.qual));
+        --num_records;
+    }
+    return data;
 }
 
 /*!	@function	Reads
@@ -428,7 +442,20 @@ std::vector<FastqRecord<T1, T2, T3>> read_fastq(std::string path)
 	@note
  */
 template<typename T1=std::string, typename T2=std::string, typename T3=std::string>
-FastqReads<T1, T2, T3> read_fastq_map(std::string path)
+std::vector<FastqRecord<T1, T2, T3>>
+read_fastq(std::string path)
+{
+    return read_fastq(path, [] (T1 id) { return id; });
+}
+
+/*!	@function	Reads
+	@param
+	@return
+	@note
+ */
+template<typename T1=std::string, typename T2=std::string, typename T3=std::string>
+FastqReads<T1, T2, T3>
+read_fastq_map(std::string path)
 {
    std::ifstream fastq(path, std::ios::binary);
    ReadIds<T1> ids;
