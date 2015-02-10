@@ -253,21 +253,21 @@ size_t get_contig_size(const std::string& fasta_index_path, const std::string& c
     @return A substring of a DNA sequence.
  */
 template <typename T=std::string>
-T read_fasta_contig(std::ifstream& fasta, FastaIndex index, size_t begin, size_t end)
+T read_fasta_contig(std::ifstream& fasta, FastaIndex index, size_t begin, size_t length)
 {
     fasta.seekg(index.offset, std::ios::cur);
-    size_t requested_sequence_size {end - begin};
-    T seq(requested_sequence_size);
+    T seq {};
+    seq.resize(length);
     if (index.line_length == index.line_byte_length) {
         fasta.seekg(begin, std::ios::cur);
-        fasta.read(&seq[0], requested_sequence_size);
+        fasta.read(&seq[0], length);
     } else {
         auto num_lines_before_begin = static_cast<size_t>(begin / index.line_length);
         auto num_chars_into_line    = begin % index.line_length;
         fasta.seekg(num_lines_before_begin + num_chars_into_line, std::ios::cur);
         size_t num_chars_to_skip {index.line_byte_length - index.line_length};
         size_t num_chars_read {};
-        while (num_chars_read < end) {
+        while (num_chars_read < length) {
             fasta.read(&seq[num_chars_read], index.line_length);
             fasta.ignore(num_chars_to_skip);
             num_chars_read += index.line_length;
