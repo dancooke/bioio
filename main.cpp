@@ -222,8 +222,8 @@ void test_bioio(string ref_path)
 {
     auto start = std::chrono::system_clock::now();
     
-    string seq = bioio::read_reference_seq(ref_path);
-    cout << seq.length() << endl;
+//    string seq = bioio::read_reference_seq(ref_path);
+//    cout << seq.length() << endl;
     
     auto end = std::chrono::system_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -278,15 +278,15 @@ void performance_tests()
 
 void test_read_fasta(string ref_path,  string fasta_path)
 {   
-    auto ref  = bioio::read_reference_seq<>(ref_path); // default std::string
-    auto ref1 = bioio::read_reference_seq<std::vector<char>>(ref_path);
-    auto ref2 = bioio::read_reference_seq<>(ref_path, 10000, 20000);
-    
-    auto reads  = bioio::read_fasta<>(fasta_path);
-    
-    auto read_map  = bioio::read_fasta_map<>(fasta_path);
-    // Can pass lambda to strip discription off read id.
-    auto read_map2 = bioio::read_fasta_map<>(fasta_path, [] (std::string id) { return id.substr(0, id.find(' ')); });
+//    auto ref  = bioio::read_reference_seq<>(ref_path); // default std::string
+//    auto ref1 = bioio::read_reference_seq<std::vector<char>>(ref_path);
+//    auto ref2 = bioio::read_reference_seq<>(ref_path, 10000, 20000);
+//    
+//    auto reads  = bioio::read_fasta<>(fasta_path);
+//    
+//    auto read_map  = bioio::read_fasta_map<>(fasta_path);
+//    // Can pass lambda to strip discription off read id.
+//    auto read_map2 = bioio::read_fasta_map<>(fasta_path, [] (std::string id) { return id.substr(0, id.find(' ')); });
     
     // for (auto& id : read_map2.first) {
     //     cout << id << '\n' << read_map2.second.at(id) << endl;
