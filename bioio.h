@@ -277,7 +277,6 @@ T read_fasta_contig(std::ifstream& fasta, const FastaIndex& index, size_t begin,
             num_chars_read += index.line_length;
         }
     }
-    std::cout << seq << std::endl;
     return seq;
 }
 
