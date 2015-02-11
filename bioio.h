@@ -18,6 +18,7 @@
 #include <set>
 #include <sstream>
 #include <exception>
+#include <algorithm>
 
 namespace bioio {
 
@@ -80,8 +81,8 @@ struct FastaIndex
         contig_name      = parts[0];
         length           = std::stoll(parts[1]);
         offset           = std::stoll(parts[2]);
-        line_length      = std::stoll(parts[3]);
-        line_byte_length = std::stoll(parts[4]);
+        line_length      = std::stoll(parts[4]);
+        line_byte_length = std::stoll(parts[3]);
     }
 };
 
@@ -144,9 +145,6 @@ class BadIndexException : public std::exception
     REFERENCE: Optimised for reading a Fasta file with a single contig
  =======================================================================================*/
 
-/*!	@function	Reads a FASTA file with a single record.
-	@return Just the DNA sequence.
- */
 template <typename T=std::string>
 T read_single_contig_fasta_seq(const std::string& fasta_path)
 {
@@ -163,9 +161,6 @@ T read_single_contig_fasta_seq(const std::string& fasta_path)
     return seq;
 }
 
-/*!	@function	Reads a FASTA file with a single record.
-	@return The header and DNA sequence.
- */
 template <typename T1=std::string, typename T2=std::string>
 FastaRecord<T1, T2>
 read_ref(const std::string& fasta_path)
@@ -198,9 +193,6 @@ get_fasta_index_contig_names(std::ifstream& fasta_index)
     return region_names;
 }
 
-/*!	@function	Gets the region names from a FASTA index.
-	@return A vector of the region names in the given index.
- */
 inline
 std::vector<std::string>
 get_fasta_index_contig_names(const std::string& fasta_index_path)
@@ -209,9 +201,6 @@ get_fasta_index_contig_names(const std::string& fasta_index_path)
     return get_fasta_index_contig_names(fasta_index);
 }
 
-/*!	@function	Reads a FASTA index.
-	@return Map of contig names to FastaIndex's.
- */
 inline
 std::unordered_map<std::string, FastaIndex>
 read_fasta_index(const std::string& fasta_index_path)
@@ -249,55 +238,62 @@ size_t get_contig_size(const std::string& fasta_index_path, const std::string& c
     FASTA: For reading FASTAs with index files
  =======================================================================================*/
 
-/*!	@function	Reads a region of a FASTA file from the given index.
-    @return A substring of a DNA sequence.
- */
-template <typename T=std::string>
-T read_fasta_contig(std::ifstream& fasta, FastaIndex index, size_t begin, size_t length)
+inline
+size_t get_line_offset(const FastaIndex& index, size_t begin)
 {
-    fasta.seekg(index.offset, std::ios::cur);
+    return begin % index.line_byte_length;
+}
+
+inline
+size_t get_contig_offset(const FastaIndex& index, size_t begin)
+{
+    return index.offset + index.line_length * (begin / index.line_byte_length) +
+                get_line_offset(index, begin);
+}
+
+inline
+size_t get_remaining_line_length(const FastaIndex& index, size_t begin)
+{
+    return index.line_length - get_line_offset(index, begin);
+}
+
+template <typename T=std::string>
+T read_fasta_contig(std::ifstream& fasta, const FastaIndex& index, size_t begin, size_t length)
+{
+    fasta.seekg(get_contig_offset(index, begin), std::ios::beg);
     T seq {};
     seq.resize(length);
     if (index.line_length == index.line_byte_length) {
-        fasta.seekg(begin, std::ios::cur);
         fasta.read(&seq[0], length);
     } else {
-        auto num_lines_before_begin = static_cast<size_t>(begin / index.line_length);
-        auto num_chars_into_line    = begin % index.line_length;
-        fasta.seekg(num_lines_before_begin + num_chars_into_line, std::ios::cur);
-        size_t num_chars_to_skip {index.line_byte_length - index.line_length};
-        size_t num_chars_read {};
+        size_t line_length_to_read {std::min(length, get_remaining_line_length(index, begin))};
+        fasta.read(&seq[0], line_length_to_read);
+        size_t num_line_end_bytes {index.line_byte_length - index.line_length};
+        fasta.ignore(num_line_end_bytes);
+        size_t num_chars_read {line_length_to_read};
         while (num_chars_read < length) {
             fasta.read(&seq[num_chars_read], index.line_length);
-            fasta.ignore(num_chars_to_skip);
+            fasta.ignore(num_line_end_bytes);
             num_chars_read += index.line_length;
         }
     }
+    std::cout << seq << std::endl;
     return seq;
 }
 
-/*!	@function	Reads a region of a FASTA file from the given index.
-    @return A substring of a DNA sequence.
- */
 template <typename T=std::string>
-T read_fasta_contig(std::ifstream& fasta, FastaIndex index)
+T read_fasta_contig(std::ifstream& fasta, const FastaIndex& index)
 {
     return read_fasta_contig(fasta, index, 0, index.length);
 }
 
-/*!	@function	Reads a region of a FASTA file from the given index.
-    @return A substring of a DNA sequence.
- */
 template <typename T=std::string>
-T read_fasta_contig(const std::string& fasta_path, FastaIndex index)
+T read_fasta_contig(const std::string& fasta_path, const FastaIndex& index)
 {
     std::ifstream fasta(fasta_path, std::ios::binary | std::ios::beg);
     return read_fasta_contig(fasta, index);
 }
 
-/*!	@function	Writes a single fasta record to a file.
-	@return 1 for sucess, 0 for failure.
- */
 template <typename T1=std::string, typename T2=std::string>
 void write_fasta(const std::string& fasta_path, FastaRecord<T1, T2> data)
 {
