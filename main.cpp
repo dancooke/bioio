@@ -220,15 +220,15 @@ void test_buff(string ref_path)
 
 void test_bioio(string ref_path)
 {
+    std::ifstream fasta(ref_path);
+    auto index = bioio::read_fasta_index(ref_path + ".fai")["5"];
+    
     auto start = std::chrono::system_clock::now();
     
-//    string seq = bioio::read_reference_seq(ref_path);
-//    cout << seq.length() << endl;
+    auto seq = bioio::read_fasta_contig(fasta, index, 100000, 100);
     
     auto end = std::chrono::system_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    
-    //cout << seq.length() << endl;
+    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
     
     cout << "bioio: " << elapsed.count() << endl;
 }
@@ -251,8 +251,9 @@ void test_seqan(string ref_path)
 
 void performance_tests()
 {
-    //string ref_path {"/Users/dcooke/Genomics/References/human_g1k_v37.fasta"};
-    string ref_path {"/Users/dcooke/Genomics/References/R00000042.fasta"};
+    std::string homedir {getenv("HOME")};
+    string ref_path {homedir + "/Genomics/References/human_g1k_v37.fasta"};
+    //string ref_path {"/Users/dcooke/Genomics/References/R00000042.fasta"};
     //string ref_path {"/Users/dcooke/Genomics/References/lambda_ref.fasta"};
     
     // test_it(ref_path);
@@ -269,7 +270,7 @@ void performance_tests()
     
     test_bioio(ref_path);
     
-    test_seqan(ref_path);
+    //test_seqan(ref_path);
 }
 
 /*=======================================================================================
@@ -305,12 +306,12 @@ int main(int argc, const char * argv[])
 {   
     performance_tests();
     
-    string ref_path {"/Users/dcooke/Genomics/References/R00000042.fasta"};
-    string fasta_path {"/Users/dcooke/Genomics/Nanopore/Data/tranche1/processed/m1/fastq/R7_tranche1_m1_template.fa"};
-    string fastq_path {"/Users/dcooke/Genomics/Nanopore/Data/lambdaR7/m1/raw_reads/template.fq"};
-    
-    test_read_fasta(ref_path, fasta_path);
-    test_read_fastq(fastq_path);
+//    string ref_path {"/Users/dcooke/Genomics/References/R00000042.fasta"};
+//    string fasta_path {"/Users/dcooke/Genomics/Nanopore/Data/tranche1/processed/m1/fastq/R7_tranche1_m1_template.fa"};
+//    string fastq_path {"/Users/dcooke/Genomics/Nanopore/Data/lambdaR7/m1/raw_reads/template.fq"};
+//    
+//    test_read_fasta(ref_path, fasta_path);
+//    test_read_fastq(fastq_path);
     
     return 0;
 }
