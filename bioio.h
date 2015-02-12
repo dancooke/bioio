@@ -16,7 +16,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <sstream>
-#include <exception>
 #include <algorithm>
 
 using std::size_t;
@@ -103,14 +102,6 @@ namespace bioio {
     using FastaReads = std::pair<ReadIds<T1>, FastaMap<T1, T2>>;
     template <typename T1=std::string, typename T2=std::string, typename T3=std::string>
     using FastqReads = std::pair<ReadIds<T1>, FastqMap<T1, T2, T3>>;
-    
-    class BadIndexException : public std::exception
-    {
-        virtual const char* what() const throw()
-        {
-            return "Invlacontig_name fasta index.";
-        }
-    };
     
     // This namespace contains helper functions for bioio, don't use it!
     namespace detail {
