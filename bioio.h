@@ -468,11 +468,9 @@ namespace bioio {
     
     template<typename T1=std::string, typename T2=std::string, typename T3=std::string, typename F>
     std::vector<FastqRecord<T1, T2, T3>>
-    read_fastq(std::string path, F f)
+    read_fastq(std::ifstream& fastq, size_t num_records, F f)
     {
-        std::ifstream fastq(path, std::ios::binary);
         std::vector<FastqRecord<T1, T2, T3>> data;
-        size_t num_records = detail::get_num_records(fastq, '@');
         data.reserve(num_records);
         while (num_records) {
             auto record = detail::read_fastq_record<T1, T2, T3>(fastq);
@@ -482,12 +480,43 @@ namespace bioio {
         return data;
     }
     
+    template<typename T1=std::string, typename T2=std::string, typename T3=std::string, typename F>
+    std::vector<FastqRecord<T1, T2, T3>>
+    read_fastq(std::ifstream& fastq, F f)
+    {
+        return read_fastq(fastq, detail::get_num_records(fastq, '@'), f);
+    }
+    
+    template<typename T1=std::string, typename T2=std::string, typename T3=std::string, typename F>
+    std::vector<FastqRecord<T1, T2, T3>>
+    read_fastq(std::string path, F f)
+    {
+        std::ifstream fastq(path, std::ios::binary);
+        return read_fastq(fastq, f);
+    }
+    
     template<typename T1=std::string, typename T2=std::string, typename T3=std::string>
     inline
     std::vector<FastqRecord<T1, T2, T3>>
     read_fastq(std::string path)
     {
         return read_fastq(path, [] (T1 contig_name) { return contig_name; });
+    }    
+    
+    template<typename T1=std::string, typename T2=std::string, typename T3=std::string>
+    inline
+    std::vector<FastqRecord<T1, T2, T3>>
+    read_fastq(std::ifstream& fastq)
+    {
+        return read_fastq(fastq, [] (T1 contig_name) { return contig_name; });
+    }
+    
+    template<typename T1=std::string, typename T2=std::string, typename T3=std::string>
+    inline
+    std::vector<FastqRecord<T1, T2, T3>>
+    read_fastq(std::ifstream& fastq, size_t num_records)
+    {
+        return read_fastq(fastq, num_records, [] (T1 contig_name) { return contig_name; });
     }
     
     template<typename T1=std::string, typename T2=std::string, typename T3=std::string>
@@ -507,6 +536,7 @@ namespace bioio {
         }
         return {contig_names, data};
     }
+    
 } // end bioio namespace
 
 #endif /* defined(__bioio__bioio__) */
