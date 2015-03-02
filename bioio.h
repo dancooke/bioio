@@ -222,7 +222,7 @@ namespace bioio {
     
     template <typename T1=std::string, typename T2=std::string>
     FastaRecord<T1, T2>
-    read_ref(const std::string& fasta_path)
+    read_single_contig_fasta(const std::string& fasta_path)
     {
         std::ifstream fasta(fasta_path, std::ios::binary | std::ios::ate);
         T1 contig_name;
@@ -320,6 +320,7 @@ namespace bioio {
                 num_chars_read += index.line_length;
             }
             seq.resize(length);
+            fasta.clear();
         }
         return seq;
     }
