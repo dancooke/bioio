@@ -31,7 +31,7 @@ void read_fastq_records_example(const string& fasta_path)
     std::ifstream fastq {fasta_path};
     
     // Read the first 10 records
-    auto some_reads = bioio::read_fastq(fastq, 11);
+    auto some_reads = bioio::read_fastq(fastq, 10);
     
     cout << some_reads[0].name << endl;
     cout << some_reads[0].seq << endl;
