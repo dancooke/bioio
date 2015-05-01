@@ -14,9 +14,6 @@
 #include <iterator>
 #include <cstdio>
 
-#include <seqan/sequence.h>
-#include <seqan/seq_io.h>
-
 #include "bioio.h"
 
 using std::string;
@@ -233,21 +230,21 @@ void test_bioio(string ref_path)
     cout << "bioio: " << elapsed.count() << endl;
 }
 
-void test_seqan(string ref_path)
-{
-    auto start = std::chrono::system_clock::now();
-    
-    seqan::CharString id;
-    seqan::Dna5String seq;
-    
-    seqan::SequenceStream seqStream(ref_path.c_str());
-    readRecord(id, seq, seqStream);
-    cout << id << '\t' << length(seq) << endl;
-    
-    auto end = std::chrono::system_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    cout << "seqan: " << elapsed.count() << endl;
-}
+// void test_seqan(string ref_path)
+// {
+//     auto start = std::chrono::system_clock::now();
+//
+//     seqan::CharString id;
+//     seqan::Dna5String seq;
+//
+//     seqan::SequenceStream seqStream(ref_path.c_str());
+//     readRecord(id, seq, seqStream);
+//     cout << id << '\t' << length(seq) << endl;
+//
+//     auto end = std::chrono::system_clock::now();
+//     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+//     cout << "seqan: " << elapsed.count() << endl;
+// }
 
 void performance_tests()
 {
@@ -277,7 +274,7 @@ void performance_tests()
  Examples: some examples of using bioio
  =======================================================================================*/
 
-void test_read_fasta(string ref_path,  string fasta_path)
+void test_read_fasta(string ref_path, string fasta_path)
 {   
 //    auto ref  = bioio::read_reference_seq<>(ref_path); // default std::string
 //    auto ref1 = bioio::read_reference_seq<std::vector<char>>(ref_path);
