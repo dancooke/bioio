@@ -16,17 +16,25 @@ using std::cout;
 using std::endl;
 using std::size_t;
 
-void read_indexed_fasta_example(const string& fasta_path)
+void indexed_fasta_example(const string& fasta_path, const string& fasta_index_path)
+{
+    bioio::FastaIndex the_fasta_index {bioio::read_fasta_index(fasta_index_path)};
+    
+    std::ifstream fasta {fasta_path};
+    
+    //auto chr20 = bioio::read_fasta_contig(fasta, the_fasta_index["20"]);
+    
+    auto chr4_section = bioio::read_fasta_contig(fasta, the_fasta_index["4"], 5e5, 5.1e5);
+    
+    cout << chr4_section << endl;
+}
+
+void fasta_records_example(const string& fasta_path)
 {
     std::ifstream fasta {fasta_path};
 }
 
-void read_fasta_records_example(const string& fasta_path)
-{
-    std::ifstream fasta {fasta_path};
-}
-
-void read_fastq_records_example(const string& fasta_path)
+void fastq_records_example(const string& fasta_path)
 {
     std::ifstream fastq {fasta_path};
     
@@ -53,10 +61,12 @@ int main(int argc, const char * argv[])
     std::string human_reference {"human_g1k_v37.fasta"};
     
     std::string human_reference_fasta {home_dir + genomics_dir + reference_dir + human_reference};
+    std::string human_reference_fasta_index {human_reference_fasta + ".fai"};
     
     std::string a_fastq_file {home_dir + genomics_dir + "Nanopore/Data/chr4_2D.fastq"};
     
-    read_fastq_records_example(a_fastq_file);
+    indexed_fasta_example(human_reference_fasta, human_reference_fasta_index);
+    //fastq_records_example(a_fastq_file);
     
     return 0;
 }
