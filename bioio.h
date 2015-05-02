@@ -51,9 +51,10 @@ namespace bioio
         line_byte_length {line_byte_length} 
         {}
         
-        FastaContigIndex(std::string fasta_index_line)
+        template <typename T>
+        FastaContigIndex(T&& fasta_index_line)
         {
-            auto parts       = detail::split(std::move(fasta_index_line), '\t');
+            auto parts       = detail::split(std::forward<T>(fasta_index_line), '\t');
             contig_name      = parts[0];
             length           = std::stoll(parts[1]);
             offset           = std::stoll(parts[2]);
