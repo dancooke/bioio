@@ -46,9 +46,14 @@ GenomicRegion parse_region(const std::string& region, const bioio::FastaIndex& i
     
     if (std::regex_search(filtered_region, match, re) && match.size() == 5) {
         auto contig_name = match.str(1);
-        size_t begin {}, end {};
+        
+        if (index.count(contig_name) == 0) {
+            throw std::runtime_error {"contig " + contig_name + " not found"};
+        }
         
         auto contig_size = index.at(contig_name).length;
+        
+        size_t begin {}, end {};
         
         if (match.str(2).empty()) {
             end = contig_size;
@@ -64,7 +69,7 @@ GenomicRegion parse_region(const std::string& region, const bioio::FastaIndex& i
             }
             
             if (begin > contig_size || end > contig_size) {
-                throw std::runtime_error {"region " + region + " is larger than contig"};
+                throw std::runtime_error {"region " + region + " is larger than contig " + contig_name + ":0-" + std::to_string(contig_size)};
             }
         }
         
@@ -93,47 +98,61 @@ void print_usage()
 
 int main(int argc, char **argv)
 {
-    if (argc < 3) {
+    if (cmd_option_exists(argv, argv + argc, "-h")) {
+        print_usage();
+        return 0;
+    } else if (argc < 3) {
+        std::cerr << "Error: not enough command line arguments" << std::endl;
         print_usage();
         return 1;
     }
     
-    std::string index_path {};
-    
-    index_path = get_cmd_option(argv, argv + argc, "-i");
+    auto index_path = get_cmd_option(argv, argv + argc, "-i");
     
     std::string fasta_path {argv[argc - 2]};
     
-    if (index_path.empty()) {
-        index_path = fasta_path;
-        index_path.replace(index_path.begin() + index_path.find_last_of("."), index_path.end(), ".fai");
+    std::ifstream fasta {fasta_path, std::ios::binary | std::ios::beg};
+    
+    if (!fasta) {
+        std::cerr << "Error: could not open fasta " << fasta_path << std::endl;
+        print_usage();
+        return 1;
     }
     
-    std::ifstream index_file {index_path};
+    if (index_path.empty()) {
+        if (index_path.find(".") != std::string::npos) {
+            index_path = fasta_path;
+            index_path.replace(index_path.begin() + index_path.find_last_of("."), index_path.end(), ".fai");
+        }
+    }
+    
+    std::ifstream index_file {index_path, std::ios::binary | std::ios::beg};
     
     if (!index_file) {
         index_file.open(fasta_path + ".fai");
         if (!index_file) {
-            std::cerr << "Could not open index file" << std::endl;
+            std::cerr << "Error: could not open index file, use samtools faidx <fasta> to make index file" << std::endl;
             return 1;
         }
     }
     
-    auto index = bioio::read_fasta_index(index_file);
-    
-    auto region = parse_region(argv[argc - 1], index);
-    
-    const auto& contig = std::get<0>(region);
-    auto begin         = std::get<1>(region);
-    auto length        = std::get<2>(region) - begin;
-    
-    auto sequence = bioio::read_fasta_contig(fasta_path, index.at(contig), begin, length);
-    
-    if (cmd_option_exists(argv, argv + argc, "-s")) {
-        std::cout << sequence.size() << std::endl;
-    } else {
-        std::cout << sequence << std::endl;
+    try {
+        auto index = bioio::read_fasta_index(index_file);
+        
+        auto region        = parse_region(argv[argc - 1], index);
+        const auto& contig = std::get<0>(region);
+        auto begin         = std::get<1>(region);
+        auto length        = std::get<2>(region) - begin;
+        
+        if (cmd_option_exists(argv, argv + argc, "-s")) {
+            std::cout << length << std::endl;
+        } else {
+            std::cout << bioio::read_fasta_contig(fasta, index.at(contig), begin, length) << std::endl;
+        }
+        
+        return 0;
+    } catch (std::runtime_error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
     }
-    
-    return 0;
 }
