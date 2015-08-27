@@ -8,21 +8,19 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstddef>
 
 #include "bioio.h"
 
 using std::string;
 using std::cout;
 using std::endl;
-using std::size_t;
 
 void indexed_fasta_example(const string& fasta_path, const string& fasta_index_path)
 {
     bioio::FastaIndex the_fasta_index {bioio::read_fasta_index(fasta_index_path)};
     
     std::ifstream fasta {fasta_path};
-    
-    //auto chr20 = bioio::read_fasta_contig(fasta, the_fasta_index["20"]);
     
     auto chr4_section = bioio::read_fasta_contig(fasta, the_fasta_index["4"], 5e5, 5.1e5);
     

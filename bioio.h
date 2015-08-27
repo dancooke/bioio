@@ -14,6 +14,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstddef>   // size_t
+#include <limits>
 #include <sstream>   // std::stringstream
 #include <algorithm> // std::copy, std::remove
 #include <iterator>  // std::back_inserter
@@ -166,7 +167,7 @@ namespace bioio
                 line.shrink_to_fit();
                 auto line_size = line.size();
                 
-                SequenceType seq;
+                SequenceType seq {};
                 auto it = std::back_inserter(seq);
                 std::copy(line.begin(), line.end(), it);
                 
@@ -266,17 +267,17 @@ namespace bioio
     
     namespace detail
     {
-        inline size_t line_offset(const ::bioio::FastaContigIndex& index, size_t begin)
+        inline size_t line_offset(const ::bioio::FastaContigIndex& index, const size_t begin)
         {
             return begin % index.line_length;
         }
         
-        inline size_t region_offset(const ::bioio::FastaContigIndex& index, size_t begin)
+        inline size_t region_offset(const ::bioio::FastaContigIndex& index, const size_t begin)
         {
             return index.offset + begin / index.line_length * index.line_byte_length + line_offset(index, begin);
         }
         
-        inline size_t remaining_line_length(const ::bioio::FastaContigIndex& index, size_t begin)
+        inline size_t remaining_line_length(const ::bioio::FastaContigIndex& index, const size_t begin)
         {
             return index.line_length - line_offset(index, begin);
         }
@@ -284,7 +285,7 @@ namespace bioio
     
     template <typename SequenceType = std::string>
     SequenceType 
-    read_fasta_contig(std::istream& fasta, const FastaContigIndex& index, size_t begin, size_t length)
+    read_fasta_contig(std::istream& fasta, const FastaContigIndex& index, const size_t begin, const size_t length)
     {
         fasta.seekg(detail::region_offset(index, begin), std::ios::beg);
         
@@ -297,22 +298,32 @@ namespace bioio
             // Allocate enough space to fit a full last line so don't need to keep
             // checking how much of the final line to read.
             result.resize(length + detail::remaining_line_length(index, begin + length));
+            
             auto num_chars_read = std::min(length, detail::remaining_line_length(index, begin));
             fasta.read(&result[0], num_chars_read);
-            auto num_line_end_bytes = index.line_byte_length - index.line_length;
+            
+            const auto num_line_end_bytes = index.line_byte_length - index.line_length;
             fasta.ignore(num_line_end_bytes);
             
-            while (num_chars_read < length) {
+            for (; num_chars_read < length; num_chars_read += index.line_length) {
                 fasta.read(&result[num_chars_read], index.line_length);
                 fasta.ignore(num_line_end_bytes);
-                num_chars_read += index.line_length;
             }
             
             result.resize(length);
-            fasta.clear(); // assumes indexed queries do not need eof flag
         }
         
+        fasta.clear(); // assumes indexed queries do not need eof flag
+        
         return result;
+    }
+    
+    template <typename SequenceType = std::string>
+    SequenceType
+    read_fasta_contig(const std::string& fasta_path, const FastaContigIndex& index, const size_t begin, const size_t length)
+    {
+        std::ifstream fasta {fasta_path, std::ios::binary | std::ios::beg};
+        return read_fasta_contig<SequenceType>(fasta, index, begin, length);
     }
     
     template <typename SequenceType = std::string>
