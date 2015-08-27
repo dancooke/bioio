@@ -119,11 +119,9 @@ int main(int argc, char **argv)
         return 1;
     }
     
-    if (index_path.empty()) {
-        if (index_path.find(".") != std::string::npos) {
-            index_path = fasta_path;
-            index_path.replace(index_path.begin() + index_path.find_last_of("."), index_path.end(), ".fai");
-        }
+    if (index_path.empty() && index_path.find(".") != std::string::npos) {
+        index_path = fasta_path;
+        index_path.replace(index_path.begin() + index_path.find_last_of("."), index_path.end(), ".fai");
     }
     
     std::ifstream index_file {index_path, std::ios::binary | std::ios::beg};
