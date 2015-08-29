@@ -1,8 +1,8 @@
 # Bioio
 
-Bioio is a small, fast, C++11 library for FASTA and FASTQ IO.
+Bioio is a small, fast, C++11 library for FASTA/Q I/O.
 
-Template methods allow IO into any continuous containers (e.g. std::vector and std::string).
+Template methods allow any contiguous containers (e.g. std::vector and std::string).
 
 fasta.cpp is a simple command line application that uses bioio to fetch subsequences from a fasta file. It can be compiled with `make`, and is used like
 
