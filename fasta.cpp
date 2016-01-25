@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <tuple>
+#include <random>
 
 #include "bioio.h"
 
@@ -77,6 +78,54 @@ GenomicRegion parse_region(const std::string& region, const bioio::FastaIndex& i
     }
     
     throw std::runtime_error {"region" + region + " has invalid format"};
+}
+
+namespace detail
+{
+    static const std::unordered_map<char, std::vector<char>> AminoAcidCodes {
+        {'A', {'A'}},                    // Adenine
+        {'C', {'C'}},                    // Cytosine
+        {'G', {'G'}},                    // Guanine
+        {'T', {'T'}},                    // Thymine
+        {'U', {'U'}},                    // Uracil
+        {'R', {'A', 'G'}},               // puRine
+        {'Y', {'C', 'T', 'U'}},          // pYrimidines
+        {'K', {'G', 'T', 'U'}},          // Ketones
+        {'M', {'A', 'C'}},               // aMino groups
+        {'S', {'C', 'G'}},               // Strong interaction
+        {'W', {'A', 'T', 'U'}},          // Weak interaction
+        {'B', {'C', 'G', 'T', 'U'}},     // not A
+        {'D', {'A', 'G', 'T', 'U'}},     // not C
+        {'H', {'A', 'C', 'T', 'U'}},     // not G
+        {'V', {'A', 'C', 'G'}},          // not T/U
+        {'N', {'A', 'C', 'G', 'T', 'U'}} // Nucleic acid
+    };
+    
+    template <typename Container>
+    typename Container::value_type random_member(const Container& values)
+    {
+        static std::default_random_engine generator {};
+        if (values.empty()) throw std::runtime_error {"cannot sample from empty container"};
+        if (values.size() == 1) return *std::cbegin(values);
+        std::uniform_int_distribution<size_t> distribution {0, values.size() - 1};
+        return *std::next(std::cbegin(values), distribution(generator));
+    }
+} // end namespace detail
+
+void randomise_all(std::string& sequence)
+{
+    for (auto& base : sequence) {
+        base = detail::random_member(detail::AminoAcidCodes.at(base));
+    }
+}
+
+void randomise_non_ns(std::string& sequence)
+{
+    for (auto& base : sequence) {
+        if (base != 'N') {
+            base = detail::random_member(detail::AminoAcidCodes.at(base));
+        }
+    }
 }
 
 bool cmd_option_exists(char** begin, char** end, const std::string& option)
@@ -145,7 +194,15 @@ int main(int argc, char **argv)
         if (cmd_option_exists(argv, argv + argc, "-s")) {
             std::cout << length << std::endl;
         } else {
-            std::cout << bioio::read_fasta_contig(fasta, index.at(contig), begin, length) << std::endl;
+            auto sequence = bioio::read_fasta_contig(fasta, index.at(contig), begin, length);
+            
+            if (cmd_option_exists(argv, argv + argc, "-r")) {
+                randomise_non_ns(sequence);
+            } else if (cmd_option_exists(argv, argv + argc, "-R")) {
+                randomise_all(sequence);
+            }
+            
+            std::cout << sequence << std::endl;
         }
         
         return 0;

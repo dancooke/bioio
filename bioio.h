@@ -45,7 +45,7 @@ namespace bioio
     } // end namespace detail
     
    /*=======================================================================================
-    TYPEDEFS
+    Types
     =======================================================================================*/
     
     struct FastaContigIndex
@@ -57,10 +57,11 @@ namespace bioio
         size_t line_byte_length;
         
         FastaContigIndex() = default;
+        
         template <typename T>
         explicit FastaContigIndex(T&& contig_name, size_t length, size_t offset,
                                   size_t line_length, size_t line_byte_length)
-        : 
+        :
         contig_name {std::forward<T>(contig_name)},
         offset {offset}, 
         length {length},
@@ -71,7 +72,8 @@ namespace bioio
         template <typename T>
         explicit FastaContigIndex(const T& fasta_index_line)
         {
-            auto parts       = detail::split(fasta_index_line, '\t');
+            const auto parts = detail::split(fasta_index_line, '\t');
+            
             contig_name      = parts[0];
             length           = std::stoull(parts[1]);
             offset           = std::stoull(parts[2]);
