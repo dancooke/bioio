@@ -1,6 +1,6 @@
 # Bioio
 
-Bioio is a small, fast, C++11 library for FASTA/Q I/O.
+Bioio is a small, fast, C++14 library for FASTA/Q I/O.
 
 Template methods allow any contiguous containers (e.g. std::vector and std::string).
 

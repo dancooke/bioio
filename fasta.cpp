@@ -74,7 +74,7 @@ GenomicRegion parse_region(const std::string& region, const bioio::FastaIndex& i
             }
         }
         
-        return {std::move(contig_name), begin, end};
+        return GenomicRegion {std::move(contig_name), begin, end};
     }
     
     throw std::runtime_error {"region" + region + " has invalid format"};
