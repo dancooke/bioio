@@ -36,25 +36,24 @@
 
 using GenomicRegion = std::tuple<std::string, size_t, size_t>;
 
-GenomicRegion parse_region(const std::string& region, const bioio::FastaIndex& index)
+GenomicRegion parse_region(std::string region, const bioio::FastaIndex& index)
 {
-    std::string filtered_region {};
-    
-    std::remove_copy(region.cbegin(), region.cend(), std::back_inserter(filtered_region), ',');
+    region.erase(std::remove(std::begin(region), std::end(region), ','), std::end(region));
     
     const static std::regex re {"([^:]+)(?::(\\d+)(-)?(\\d*))?"};
+    
     std::smatch match {};
     
-    if (std::regex_search(filtered_region, match, re) && match.size() == 5) {
+    if (std::regex_search(region, match, re) && match.size() == 5) {
         auto contig_name = match.str(1);
         
         if (index.count(contig_name) == 0) {
             throw std::runtime_error {"contig " + contig_name + " not found"};
         }
         
-        auto contig_size = index.at(contig_name).length;
+        const auto contig_size = index.at(contig_name).length;
         
-        size_t begin {}, end {};
+        size_t begin {0}, end {0};
         
         if (match.str(2).empty()) {
             end = contig_size;
@@ -69,15 +68,19 @@ GenomicRegion parse_region(const std::string& region, const bioio::FastaIndex& i
                 end = static_cast<size_t>(std::stoull(match.str(4)));
             }
             
-            if (begin > contig_size || end > contig_size) {
+            if (begin > contig_size) {
                 throw std::runtime_error {"region " + region + " is larger than contig " + contig_name + ":0-" + std::to_string(contig_size)};
+            }
+            
+            if (end > contig_size) {
+                end = contig_size;
             }
         }
         
         return GenomicRegion {std::move(contig_name), begin, end};
     }
     
-    throw std::runtime_error {"region" + region + " has invalid format"};
+    throw std::runtime_error {"could not parse region " + region};
 }
 
 namespace detail
@@ -105,12 +108,12 @@ namespace detail
     typename Container::value_type random_member(const Container& values)
     {
         static std::default_random_engine generator {};
-        if (values.empty()) throw std::runtime_error {"cannot sample from empty container"};
+        if (values.empty()) throw std::runtime_error {"trying to sample from empty container"};
         if (values.size() == 1) return *std::cbegin(values);
         std::uniform_int_distribution<size_t> distribution {0, values.size() - 1};
         return *std::next(std::cbegin(values), distribution(generator));
     }
-} // end namespace detail
+} // namespace detail
 
 void randomise_all(std::string& sequence)
 {
@@ -160,7 +163,7 @@ int main(int argc, char **argv)
     
     std::string fasta_path {argv[argc - 2]};
     
-    std::ifstream fasta {fasta_path, std::ios::binary | std::ios::beg};
+    std::ifstream fasta {fasta_path, std::ios::binary};
     
     if (!fasta) {
         std::cerr << "Error: could not open fasta " << fasta_path << std::endl;
@@ -173,7 +176,7 @@ int main(int argc, char **argv)
         index_path.replace(index_path.begin() + index_path.find_last_of("."), index_path.end(), ".fai");
     }
     
-    std::ifstream index_file {index_path, std::ios::binary | std::ios::beg};
+    std::ifstream index_file {index_path, std::ios::binary};
     
     if (!index_file) {
         index_file.open(fasta_path + ".fai");
@@ -184,12 +187,12 @@ int main(int argc, char **argv)
     }
     
     try {
-        auto index = bioio::read_fasta_index(index_file);
+        const auto index = bioio::read_fasta_index(index_file);
         
-        auto region        = parse_region(argv[argc - 1], index);
+        const auto region  = parse_region(argv[argc - 1], index);
         const auto& contig = std::get<0>(region);
-        auto begin         = std::get<1>(region);
-        auto length        = std::get<2>(region) - begin;
+        const auto begin   = std::get<1>(region);
+        const auto length  = std::get<2>(region) - begin;
         
         if (cmd_option_exists(argv, argv + argc, "-s")) {
             std::cout << length << std::endl;
