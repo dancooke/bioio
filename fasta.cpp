@@ -152,6 +152,10 @@ int main(int argc, char **argv)
 {
     if (cmd_option_exists(argv, argv + argc, "-h")) {
         print_usage();
+        std::cout << "options:" << '\n';
+        std::cout << "\t-h\tprint help" << '\n';
+        std::cout << "\t-s\toutput sequence size of region" << '\n';
+        //std::cout << "\t" << '\n';
         return 0;
     } else if (argc < 3) {
         std::cerr << "Error: not enough command line arguments" << std::endl;

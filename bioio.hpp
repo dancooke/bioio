@@ -1,4 +1,4 @@
-/*  bioio.h -- FASTA/Q I/O
+/*  bioio.hpp -- FASTA/Q I/O
  
  Copyright (C) 2015 University of Oxford.
  
@@ -166,10 +166,10 @@ namespace bioio
         ::bioio::FastaRecord<StringType, SequenceType>
         read_fasta_record(std::istream& fasta)
         {
-            StringType contig_name {};
+            StringType contig_name;
             std::getline(fasta, contig_name); // contig_name always a single line
             
-            SequenceType line {};
+            SequenceType line;
             std::getline(fasta, line);
             
             // The FASTA format is not as simple as FASTQ - the sequence
@@ -182,11 +182,11 @@ namespace bioio
                 
                 SequenceType seq {};
                 auto it = std::back_inserter(seq);
-                std::copy(line.begin(), line.end(), it);
+                std::copy(std::begin(line), std::end(line), it);
                 
                 while (fasta.good() && fasta.peek() != '>') {
                     fasta.getline(&line[0], line_size + 1);
-                    std::copy(line.begin(), line.begin() + fasta.gcount(), it);
+                    std::copy(std::begin(line), std::begin(line) + fasta.gcount(), it);
                 }
                 
                 return ::bioio::FastaRecord<StringType, SequenceType> {std::move(contig_name), std::move(seq)};
@@ -198,9 +198,9 @@ namespace bioio
         ::bioio::FastqRecord<StringType, SequenceType1, SequenceType2>
         read_fastq_record(std::istream& fastq)
         {
-            StringType name {};
-            SequenceType1 seq {};
-            SequenceType2 quals {};
+            StringType name;
+            SequenceType1 seq;
+            SequenceType2 quals;
             
             // Unlike FASTA, FASTQ always use one line per field.
             std::getline(fastq, name);
@@ -324,32 +324,41 @@ namespace bioio
     template <typename SequenceType = std::string>
     SequenceType 
     read_fasta_contig(std::istream& fasta, const FastaContigIndex& index,
-                      const size_t begin, const size_t length)
+                      const size_t begin, size_t length)
     {
+        SequenceType result {};
+        
+        if (length == 0 || begin >= index.length) return result;
+        
         fasta.seekg(detail::region_offset(index, begin), std::ios::beg);
         
-        SequenceType result {};
+        length = std::min(length, index.length - begin);
         
         if (index.line_length == index.line_byte_length) {
             result.resize(length);
             fasta.read(&result[0], length);
         } else {
-            // Allocate enough space to fit a full last line so don't need to keep
-            // checking how much of the final line to read.
-            result.resize(length + detail::remaining_line_length(index, begin + length));
-            
-            auto num_chars_read = std::min(length, detail::remaining_line_length(index, begin));
-            fasta.read(&result[0], num_chars_read);
-            
             const auto num_line_end_bytes = index.line_byte_length - index.line_length;
-            fasta.ignore(num_line_end_bytes);
             
-            for (; num_chars_read < length; num_chars_read += index.line_length) {
-                fasta.read(&result[num_chars_read], index.line_length);
-                fasta.ignore(num_line_end_bytes);
+            const auto num_remaining_curr_line_bytes = detail::remaining_line_length(index, begin);
+            
+            if (length <= num_remaining_curr_line_bytes) {
+                result.resize(length);
+                fasta.read(&result[0], length);
+            } else {
+                // Allocate enough space to fit a full last line so we don't need to keep
+                // checking how much of the final line to read.
+                result.resize(length + detail::remaining_line_length(index, begin + length) + num_line_end_bytes);
+                
+                fasta.read(&result[0], num_remaining_curr_line_bytes + num_line_end_bytes);
+                
+                for (auto curr_sequence_size = num_remaining_curr_line_bytes;
+                     curr_sequence_size < length; curr_sequence_size += index.line_length) {
+                    fasta.read(&result[curr_sequence_size], index.line_byte_length);
+                }
+                
+                result.resize(length);
             }
-            
-            result.resize(length);
         }
         
         fasta.clear(); // assumes indexed queries do not need eof flag
@@ -520,7 +529,7 @@ namespace bioio
         for (; num_records > 0; --num_records) {
             auto record = detail::read_fasta_record<StringType, SequenceType>(fasta);
             auto f_contig_name = f(std::move(record.contig_name));
-            if (contig_names.find(f_contig_name) != contig_names.end()) {
+            if (contig_names.find(f_contig_name) != std::end(contig_names)) {
                 records.emplace(f_contig_name, std::move(record.seq));
                 f_contig_names.insert(std::move(f_contig_name));
             }
