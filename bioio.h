@@ -40,9 +40,17 @@
 
 namespace bioio
 {   
-    namespace detail {
-        template <typename T> std::vector<std::string> split(T&& s, char delim);
-    } // end namespace detail
+    namespace detail
+    {
+        inline std::vector<std::string> split(const std::string& str, const char delim)
+        {
+            std::stringstream ss {s};
+            std::string item;
+            std::vector<std::string> result {};
+            while (std::getline(ss, item, delim)) result.emplace_back(item);
+            return result;
+        }
+    } // namespace detail
     
    /*=======================================================================================
     Types
@@ -131,29 +139,15 @@ namespace bioio
     using FastaReads = std::pair<ReadIds<StringType>, FastaMap<StringType, SequenceType>>;
     
     template <typename StringType = std::string, typename SequenceType = std::string,
-              typename SequenceType2=std::string>
+              typename SequenceType2 = std::string>
     using FastqReads = std::pair<ReadIds<StringType>, FastqMap<StringType, SequenceType, SequenceType2>>;
     
     namespace detail
     {
-        template <typename T>
-        std::vector<std::string> split(T&& s, char delim)
-        {
-            std::vector<std::string> result {};
-            std::stringstream ss {s};
-            std::string item {};
-            
-            while (std::getline(ss, item, delim)) {
-                result.emplace_back(item);
-            }
-            
-            return result;
-        }
-        
         // Counts the occurrences of record_delim that follow a newline '\n'
-        inline size_t count_records(std::istream& is, char record_delim)
+        inline size_t count_records(std::istream& is, const char record_delim)
         {
-            auto current_position = is.tellg();
+            const auto current_position = is.tellg();
             
             size_t result {};
             
@@ -217,7 +211,7 @@ namespace bioio
             return ::bioio::FastqRecord<StringType, SequenceType1, SequenceType2> 
                     {std::move(name), std::move(seq), std::move(quals)};
         }
-    } // end detail namespace
+    } // detail namespace
     
     /*=======================================================================================
      INDEX: For reading FASTA index files
@@ -300,11 +294,12 @@ namespace bioio
         {
             return index.line_length - line_offset(index, begin);
         }
-    } // end namespace detail
+    } // namespace detail
     
     template <typename SequenceType = std::string>
     SequenceType 
-    read_fasta_contig(std::istream& fasta, const FastaContigIndex& index, const size_t begin, const size_t length)
+    read_fasta_contig(std::istream& fasta, const FastaContigIndex& index,
+                      const size_t begin, const size_t length)
     {
         fasta.seekg(detail::region_offset(index, begin), std::ios::beg);
         
@@ -339,7 +334,8 @@ namespace bioio
     
     template <typename SequenceType = std::string>
     SequenceType
-    read_fasta_contig(const std::string& fasta_path, const FastaContigIndex& index, const size_t begin, const size_t length)
+    read_fasta_contig(const std::string& fasta_path, const FastaContigIndex& index,
+                      const size_t begin, const size_t length)
     {
         std::ifstream fasta {fasta_path, std::ios::binary | std::ios::beg};
         return read_fasta_contig<SequenceType>(fasta, index, begin, length);
@@ -374,17 +370,18 @@ namespace bioio
     {
         std::ifstream fasta {fasta_path, std::ios::binary | std::ios::ate};
         
-        auto length = fasta.tellg();
+        const auto file_length = fasta.tellg();
+        
         fasta.seekg(0, std::ios::beg);
         
         StringType contig_name {};
         std::getline(fasta, contig_name);
         
         SequenceType sequence {};
-        sequence.resize(length - contig_name.size() - 1);
+        sequence.resize(file_length - contig_name.size() - 1);
         
         fasta.read(&sequence[0], sequence.size());
-        sequence.erase(std::remove(sequence.begin(), sequence.end(), '\n'), sequence.end());
+        sequence.erase(std::remove(std::begin(sequence), std::end(sequence), '\n'), sequence.end());
         
         return {std::move(contig_name), std::move(sequence)};
     }
@@ -631,6 +628,6 @@ namespace bioio
         return {names, data};
     }
     
-} // end bioio namespace
+} // bioio namespace
 
 #endif /* defined(__bioio__bioio__) */
