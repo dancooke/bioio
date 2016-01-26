@@ -352,9 +352,8 @@ namespace bioio
                 
                 fasta.read(&result[0], num_remaining_curr_line_bytes + num_line_end_bytes);
                 
-                for (auto curr_sequence_size = num_remaining_curr_line_bytes;
-                     curr_sequence_size < length; curr_sequence_size += index.line_length) {
-                    fasta.read(&result[curr_sequence_size], index.line_byte_length);
+                for (auto pos = num_remaining_curr_line_bytes; pos < length; pos += index.line_length) {
+                    fasta.read(&result[pos], index.line_byte_length);
                 }
                 
                 result.resize(length);
