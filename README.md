@@ -1,8 +1,17 @@
-# Bioio
+# Bioio #
 
-Bioio is a small, fast, C++14 library for FASTA/Q I/O.
+Bioio is a leightweight, fast, C++14 library for FASTA/Q I/O. The API includes:
 
-Template methods allow any contiguous containers (e.g. std::vector and std::string).
+* Indexed fasta sequence reads.
+* Non-indexed fasta record reading.
+* Fastq record reading.
+
+The library is intended to be as flexible as possible, including features such as:
+
+* Templated methods, allowing any contiguous containers (e.g. std::vector and std::string) for sequences.
+* Optional functional parameters which are applied to record names before extraction.
+
+## Fasta ##
 
 fasta.cpp is a simple command line application that uses bioio to fetch subsequences from a fasta file. It can be compiled with `make`, and is used like
 
