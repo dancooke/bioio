@@ -1,6 +1,6 @@
 # Bioio #
 
-Bioio is a leightweight, fast, C++14 library for FASTA/Q I/O. The API includes:
+Bioio is a leightweight, fast, C++11 library for FASTA/Q I/O. The API includes:
 
 * Indexed fasta sequence reads.
 * Non-indexed fasta record reading.
