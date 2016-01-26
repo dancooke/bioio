@@ -32,7 +32,7 @@
 #include <tuple>
 #include <random>
 
-#include "bioio.h"
+#include "bioio.hpp"
 
 using GenomicRegion = std::tuple<std::string, size_t, size_t>;
 
