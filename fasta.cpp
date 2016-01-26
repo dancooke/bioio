@@ -38,7 +38,7 @@ using GenomicRegion = std::tuple<std::string, size_t, size_t>;
 
 GenomicRegion parse_region(std::string region, const bioio::FastaIndex& index)
 {
-    region.erase(std::remove(std::begin(region), std::end(region), ','), std::end(region));
+    region.erase(std::remove(region.begin(), region.end(), ','), region.end());
     
     const static std::regex re {"([^:]+)(?::(\\d+)(-)?(\\d*))?"};
     
@@ -85,7 +85,10 @@ GenomicRegion parse_region(std::string region, const bioio::FastaIndex& index)
 
 namespace detail
 {
-    static const std::unordered_map<char, std::vector<char>> AminoAcidCodes {
+    using AminoAcidCodeMap = std::unordered_map<char, std::vector<char>>;
+    
+    static const AminoAcidCodeMap AminoAcidCodes
+    {
         {'A', {'A'}},                    // Adenine
         {'C', {'C'}},                    // Cytosine
         {'G', {'G'}},                    // Guanine
@@ -109,9 +112,9 @@ namespace detail
     {
         static std::default_random_engine generator {};
         if (values.empty()) throw std::runtime_error {"trying to sample from empty container"};
-        if (values.size() == 1) return *std::cbegin(values);
+        if (values.size() == 1) return *values.cbegin();
         std::uniform_int_distribution<size_t> distribution {0, values.size() - 1};
-        return *std::next(std::cbegin(values), distribution(generator));
+        return *std::next(values.cbegin(), distribution(generator));
     }
 } // namespace detail
 

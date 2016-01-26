@@ -182,11 +182,11 @@ namespace bioio
                 
                 SequenceType seq {};
                 auto it = std::back_inserter(seq);
-                std::copy(std::begin(line), std::end(line), it);
+                std::copy(line.begin(), line.end(), it);
                 
                 while (fasta.good() && fasta.peek() != '>') {
                     fasta.getline(&line[0], line_size + 1);
-                    std::copy(std::begin(line), std::begin(line) + fasta.gcount(), it);
+                    std::copy(line.begin(), line.end() + fasta.gcount(), it);
                 }
                 
                 return ::bioio::FastaRecord<StringType, SequenceType> {std::move(contig_name), std::move(seq)};
@@ -415,7 +415,7 @@ namespace bioio
         
         fasta.read(&sequence[0], sequence.size());
         
-        sequence.erase(std::remove(std::begin(sequence), std::end(sequence), '\n'), std::end(sequence));
+        sequence.erase(std::remove(sequence.begin(), sequence.end(), '\n'), sequence.end());
         
         return FastaRecord<StringType, SequenceType> {std::move(contig_name), std::move(sequence)};
     }
@@ -528,7 +528,7 @@ namespace bioio
         for (; num_records > 0; --num_records) {
             auto record = detail::read_fasta_record<StringType, SequenceType>(fasta);
             auto f_contig_name = f(std::move(record.contig_name));
-            if (contig_names.find(f_contig_name) != std::end(contig_names)) {
+            if (contig_names.find(f_contig_name) != contig_names.end()) {
                 records.emplace(f_contig_name, std::move(record.seq));
                 f_contig_names.insert(std::move(f_contig_name));
             }
