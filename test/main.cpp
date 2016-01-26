@@ -34,7 +34,7 @@ bool test_lambda_with_index()
     const auto chunk = bioio::read_fasta_contig<std::vector<char>>(test_files::lambda, index.at(contig), chunk_begin, chunk_size);
     
     if (chunk.size() != chunk_size) return false;
-    if (!std::equal(std::cbegin(chunk), std::cend(chunk), std::next(std::cbegin(sequence), chunk_begin))) return false;
+    if (!std::equal(chunk.cbegin(), chunk.cend(), std::next(sequence.cbegin(), chunk_begin))) return false;
     
     return true;
 }
@@ -67,6 +67,11 @@ bool test_knucleotide()
     if (records[1].sequence.size() != 75000) return false;
     if (records[2].sequence.size() != 125000) return false;
     
+    if (bioio::read_fasta_seq(test_files::knucleotide, "ONE").size() != 50000) return false;
+    if (bioio::read_fasta_seq(test_files::knucleotide, "TWO").size() != 75000) return false;
+    if (bioio::read_fasta_seq(test_files::knucleotide, "THREE").size() != 125000) return false;
+    if (bioio::read_fasta_seq(test_files::knucleotide, "FOUR").size() != 0) return false;
+    
     return true;
 }
 
@@ -97,6 +102,10 @@ int main()
     
     std::cout << "Passed " << num_tests_passed << " tests" << std::endl;
     std::cout << "Failed " << num_tests_failed << " tests" << std::endl;
+    
+    auto records = bioio::read_fasta_seq("/Users/danielcooke/Development/benchmarksgame/knucleotide-input25000000.txt", "THREE");
+    
+    std::cout << records.size() << std::endl;
     
     return 0;
 }

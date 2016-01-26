@@ -36,7 +36,7 @@
 #include <algorithm>
 #include <iterator>
 #include <utility>
-
+#include <type_traits>
 
 namespace bioio
 {   
@@ -231,7 +231,7 @@ namespace bioio
             return ::bioio::FastqRecord<StringType, SequenceType1, SequenceType2> 
                     {std::move(name), std::move(seq), std::move(quals)};
         }
-    } // detail namespace
+    } // namespace detail
     
     /*=======================================================================================
      INDEX: For reading FASTA index files
@@ -455,6 +455,68 @@ namespace bioio
         return count_fasta_records(fasta);
     }
     
+    template <typename UnaryPredicate,
+              typename = typename std::enable_if<
+                                      !std::is_convertible<UnaryPredicate, std::string>::value
+                                  >::type>
+    bool seek_fasta_record(std::istream& fasta, UnaryPredicate pred)
+    {
+        std::string record;
+        while (std::getline(fasta, record)) {
+            if (pred(record)) {
+                fasta.seekg(-(record.size() + 1), std::ios_base::cur);
+                return true;
+            }
+            while (fasta) {
+                if (fasta.peek() == detail::fasta_delim) break;
+                fasta.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            }
+        }
+        return false;
+    }
+    
+    inline bool seek_fasta_record(std::istream& fasta, const std::string& name)
+    {
+        return seek_fasta_record(fasta,
+                                 [&] (const std::string& fasta_record) {
+                                     if (fasta_record.size() < name.size()) return false;
+                                     return std::equal(name.cbegin(), name.cend(),
+                                                       std::next(fasta_record.cbegin()));
+                                 });
+    }
+    
+    template <typename SequenceType = std::string, typename UnaryPredicate>
+    SequenceType read_fasta_seq(std::istream& fasta, UnaryPredicate pred)
+    {
+        if (seek_fasta_record(fasta, pred)) {
+            return detail::read_fasta_record<std::string, SequenceType>(fasta).sequence;
+        }
+        return SequenceType {};
+    }
+    
+    template <typename SequenceType = std::string, typename UnaryPredicate>
+    SequenceType read_fasta_seq(const std::string& fasta_path, UnaryPredicate pred)
+    {
+        std::ifstream fasta {fasta_path, std::ios::binary};
+        return read_fasta_seq(fasta, pred);
+    }
+    
+    template <typename SequenceType = std::string>
+    SequenceType read_fasta_seq(std::istream& fasta, const std::string& name)
+    {
+        if (seek_fasta_record(fasta, name)) {
+            return detail::read_fasta_record<std::string, SequenceType>(fasta).sequence;
+        }
+        return SequenceType {};
+    }
+    
+    template <typename SequenceType = std::string>
+    SequenceType read_fasta_seq(const std::string& fasta_path, const std::string& name)
+    {
+        std::ifstream fasta {fasta_path, std::ios::binary};
+        return read_fasta_seq(fasta, name);
+    }
+    
     template <typename SequenceType = std::string>
     std::vector<SequenceType> read_fasta_seqs(std::istream& fasta, size_t num_records)
     {
@@ -462,7 +524,7 @@ namespace bioio
         result.reserve(num_records);
         
         for (; num_records > 0; --num_records) {
-            result.emplace_back(detail::read_fasta_record<std::string, SequenceType>(fasta).seq);
+            result.emplace_back(detail::read_fasta_record<std::string, SequenceType>(fasta).sequence);
         }
         
         return result;
@@ -538,7 +600,7 @@ namespace bioio
         for (; num_records > 0; --num_records) {
             auto record = detail::read_fasta_record<StringType, SequenceType>(fasta);
             auto f_contig_name = unary_op(std::move(record.contig_name));
-            records.emplace(f_contig_name, std::move(record.seq));
+            records.emplace(f_contig_name, std::move(record.sequence));
             contig_names.insert(std::move(f_contig_name));
         }
         
@@ -600,7 +662,7 @@ namespace bioio
             auto record = detail::read_fasta_record<StringType, SequenceType>(fasta);
             auto f_contig_name = unary_op(std::move(record.contig_name));
             if (contig_names.find(f_contig_name) != contig_names.end()) {
-                records.emplace(f_contig_name, std::move(record.seq));
+                records.emplace(f_contig_name, std::move(record.sequence));
                 f_contig_names.insert(std::move(f_contig_name));
             }
         }
@@ -782,6 +844,6 @@ namespace bioio
         return {names, data};
     }
     
-} // bioio namespace
+} // namespace bioio
 
 #endif /* defined(__bioio__bioio__) */
