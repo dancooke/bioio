@@ -59,6 +59,14 @@ bool test_lambda_without_index()
 
 bool test_knucleotide()
 {
+    auto records = bioio::read_fasta(test_files::knucleotide);
+    
+    if (records.size() != 3) return false;
+    
+    if (records[0].sequence.size() != 50000) return false;
+    if (records[1].sequence.size() != 75000) return false;
+    if (records[2].sequence.size() != 125000) return false;
+    
     return true;
 }
 
