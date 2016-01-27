@@ -103,9 +103,5 @@ int main()
     std::cout << "Passed " << num_tests_passed << " tests" << std::endl;
     std::cout << "Failed " << num_tests_failed << " tests" << std::endl;
     
-    auto records = bioio::read_fasta_seq("/Users/danielcooke/Development/benchmarksgame/knucleotide-input25000000.txt", "THREE");
-    
-    std::cout << records.size() << std::endl;
-    
     return 0;
 }
