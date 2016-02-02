@@ -99,7 +99,7 @@ namespace bioio
         SequenceType sequence;
         
         FastaRecord() = delete;
-        template<typename StringType_, typename SequenceType_>
+        template <typename StringType_, typename SequenceType_>
         explicit FastaRecord(StringType_&& name, SequenceType_&& sequence)
         : 
         name {std::forward<StringType_>(name)}, 
@@ -116,7 +116,7 @@ namespace bioio
         SequenceType2 qual;
         
         FastqRecord() = delete;
-        template<typename StringType_, typename SequenceType1_, typename SequenceType2_>
+        template <typename StringType_, typename SequenceType1_, typename SequenceType2_>
         explicit FastqRecord(StringType_&& name, SequenceType1_&& seq, SequenceType2_&& qual)
         :
         name {std::forward<StringType_>(name)}, 
@@ -165,7 +165,7 @@ namespace bioio
         static constexpr char fasta_delim {'>'};
         static constexpr char fastq_delim {'@'};
         
-        template<typename StringType = std::string, typename SequenceType = std::string>
+        template <typename StringType = std::string, typename SequenceType = std::string>
         ::bioio::FastaRecord<StringType, SequenceType>
         read_fasta_record(std::istream& fasta)
         {
@@ -213,8 +213,8 @@ namespace bioio
             }
         }
         
-        template<typename StringType = std::string, typename SequenceType1 = std::string,
-                 typename SequenceType2 = std::string>
+        template <typename StringType = std::string, typename SequenceType1 = std::string,
+                  typename SequenceType2 = std::string>
         ::bioio::FastqRecord<StringType, SequenceType1, SequenceType2>
         read_fastq_record(std::istream& fastq)
         {
@@ -517,11 +517,13 @@ namespace bioio
         return read_fasta_seq(fasta, name);
     }
     
-    template <typename SequenceType = std::string>
-    std::vector<SequenceType> read_fasta_seqs(std::istream& fasta, size_t num_records)
+    template <typename Container = std::vector<std::string>>
+    Container read_fasta_seqs(std::istream& fasta, size_t num_records)
     {
-        std::vector<SequenceType> result {};
+        Container result {};
         result.reserve(num_records);
+        
+        using SequenceType = typename Container::value_type;
         
         for (; num_records > 0; --num_records) {
             result.emplace_back(detail::read_fasta_record<std::string, SequenceType>(fasta).sequence);
@@ -530,25 +532,24 @@ namespace bioio
         return result;
     }
     
-    template <typename SequenceType = std::string>
-    std::vector<SequenceType> read_fasta_seqs(std::istream& fasta)
+    template <typename Container = std::vector<std::string>>
+    Container read_fasta_seqs(std::istream& fasta)
     {
-        return read_fasta_seqs<SequenceType>(fasta, count_fasta_records(fasta));
+        return read_fasta_seqs<Container>(fasta, count_fasta_records(fasta));
     }
     
-    template <typename SequenceType = std::string>
-    std::vector<SequenceType> read_fasta_seqs(const std::string& fasta_path)
+    template <typename Container = std::vector<std::string>>
+    Container read_fasta_seqs(const std::string& fasta_path)
     {
         std::ifstream fasta {fasta_path, std::ios::binary};
-        return read_fasta_seqs<SequenceType>(fasta);
+        return read_fasta_seqs<Container>(fasta);
     }
     
-    template <typename SequenceType = std::string>
-    std::vector<SequenceType> read_fasta_seqs(const std::string& fasta_path,
-                                              const size_t num_records)
+    template <typename Container = std::vector<std::string>>
+    Container read_fasta_seqs(const std::string& fasta_path, const size_t num_records)
     {
         std::ifstream fasta {fasta_path, std::ios::binary};
-        return read_fasta_seqs<SequenceType>(fasta, num_records);
+        return read_fasta_seqs<Container>(fasta, num_records);
     }
     
     template <typename StringType = std::string, typename SequenceType = std::string>
