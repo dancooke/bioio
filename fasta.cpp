@@ -42,9 +42,9 @@ GenomicRegion parse_region(std::string region, const bioio::FastaIndex& index)
     
     const static std::regex re {"([^:]+)(?::(\\d+)(-)?(\\d*))?"};
     
-    std::smatch match {};
+    std::smatch match;
     
-    if (std::regex_search(region, match, re) && match.size() == 5) {
+    if (std::regex_match(region, match, re) && match.size() == 5) {
         auto contig_name = match.str(1);
         
         if (index.count(contig_name) == 0) {
@@ -61,7 +61,7 @@ GenomicRegion parse_region(std::string region, const bioio::FastaIndex& index)
             begin = static_cast<size_t>(std::stoull(match.str(2)));
             
             if (match.str(3).empty()) {
-                end = begin;
+                end = begin + 1;
             } else if (match.str(4).empty()) {
                 end = contig_size;
             } else {
