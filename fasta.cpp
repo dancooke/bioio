@@ -72,6 +72,10 @@ GenomicRegion parse_region(std::string region, const bioio::FastaIndex& index)
                 throw std::runtime_error {"region " + region + " is larger than contig " + contig_name + ":0-" + std::to_string(contig_size)};
             }
             
+            if (begin > end) {
+                throw std::runtime_error {"begin position is past end position in region " + region};
+            }
+            
             if (end > contig_size) {
                 end = contig_size;
             }
