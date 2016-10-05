@@ -390,7 +390,7 @@ namespace bioio
     read_fasta_contig(const std::string& fasta_path, const FastaContigIndex& index,
                       const size_t begin, const size_t length)
     {
-        std::ifstream fasta {fasta_path, std::ios::binary | std::ios::beg};
+        std::ifstream fasta {fasta_path, std::ios::binary};
         return read_fasta_contig<SequenceType>(fasta, index, begin, length);
     }
     
@@ -403,7 +403,7 @@ namespace bioio
     template <typename SequenceType = std::string>
     SequenceType read_fasta_contig(const std::string& fasta_path, const FastaContigIndex& index)
     {
-        std::ifstream fasta {fasta_path, std::ios::binary | std::ios::beg};
+        std::ifstream fasta {fasta_path, std::ios::binary};
         return read_fasta_contig<SequenceType>(fasta, index);
     }
     
