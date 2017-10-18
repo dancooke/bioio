@@ -28,3 +28,5 @@
 *.app
 
 fasta
+
+\.DS_Store
