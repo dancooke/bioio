@@ -1,6 +1,6 @@
 # Bioio #
 
-Bioio is a leightweight, fast, C++11 library for FASTA/Q I/O. The API includes:
+Bioio is a header-only, fast, C++11 library for FASTA/Q I/O. The API includes:
 
 * Indexed fasta sequence reads.
 * Non-indexed fasta record reading.
@@ -13,7 +13,7 @@ The library is intended to be as flexible as possible, including features such a
 
 ## Fasta ##
 
-fasta.cpp is a simple command line application that uses bioio to fetch subsequences from a fasta file. It can be compiled with `make`, and is used like
+fasta.cpp is a simple command line application that uses bioio to fetch subsequences from an indexed fasta file. It can be compiled with `make`, and is used like
 
     ./fasta [options] <fasta_path> <region>
 
