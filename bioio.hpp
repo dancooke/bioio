@@ -4,7 +4,7 @@
  
  Author: Daniel Cooke <dcooke@well.ox.ac.uk>
  
- Use of this source code is governed by the GPL-3.0 license that can be found in the LICENSE file. */
+ Use of this source code is governed by the MIT license that can be found in the LICENSE file. */
 
 #ifndef __bioio__bioio__
 #define __bioio__bioio__
