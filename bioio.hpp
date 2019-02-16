@@ -1,9 +1,9 @@
 /*  bioio.hpp -- FASTA/Q I/O
- 
+
  Copyright (C) 2017 University of Oxford.
- 
+
  Author: Daniel Cooke <dcooke@well.ox.ac.uk>
- 
+
  Use of this source code is governed by the MIT license that can be found in the LICENSE file. */
 
 #ifndef __bioio__bioio__
@@ -48,9 +48,9 @@ struct FastaContigIndex
     std::size_t offset;
     std::size_t line_length;
     std::size_t line_byte_length;
-    
+
     FastaContigIndex() = default;
-    
+
     template <typename T>
     explicit FastaContigIndex(T&& contig_name, std::size_t length, std::size_t offset,
                               std::size_t line_length, std::size_t line_byte_length)
@@ -58,9 +58,9 @@ struct FastaContigIndex
     , offset {offset}
     , length {length}
     , line_length {line_length}
-    , line_byte_length {line_byte_length} 
+    , line_byte_length {line_byte_length}
     {}
-    
+
     template <typename T>
     explicit FastaContigIndex(const T& fasta_index_line)
     {
@@ -80,7 +80,7 @@ struct FastaRecord
 {
     StringType name;
     SequenceType sequence;
-    
+
     FastaRecord() = delete;
     template <typename StringType_, typename SequenceType_>
     explicit FastaRecord(StringType_&& name, SequenceType_&& sequence)
@@ -96,13 +96,13 @@ struct FastqRecord
     StringType name;
     SequenceType1 seq;
     SequenceType2 qual;
-    
+
     FastqRecord() = delete;
     template <typename StringType_, typename SequenceType1_, typename SequenceType2_>
     explicit FastqRecord(StringType_&& name, SequenceType1_&& seq, SequenceType2_&& qual)
     :name {std::forward<StringType_>(name)}
     , seq {std::forward<SequenceType1_>(seq)}
-    , qual {std::forward<SequenceType2_>(qual)} 
+    , qual {std::forward<SequenceType2_>(qual)}
     {}
 };
 
@@ -138,10 +138,10 @@ namespace detail
         is.seekg(current_position, std::ios::beg);
         return result;
     }
-    
+
     static constexpr char fasta_delim {'>'};
     static constexpr char fastq_delim {'@'};
-    
+
     template <typename StringType = std::string, typename SequenceType = std::string>
     ::bioio::FastaRecord<StringType, SequenceType>
     read_fasta_record(std::istream& fasta)
@@ -150,7 +150,7 @@ namespace detail
         std::getline(fasta, name); // name is always a single line
         SequenceType line;
         std::getline(fasta, line);
-        
+
         // The FASTA format is not as simple as FASTQ - the sequence
         // may be broken into multiple lines. We assume each line is the same size.
         if (!fasta.good() || fasta.peek() == fasta_delim) {
@@ -178,7 +178,7 @@ namespace detail
             return ::bioio::FastaRecord<StringType, SequenceType> {std::move(name), std::move(seq)};
         }
     }
-    
+
     template <typename StringType = std::string, typename SequenceType1 = std::string,
               typename SequenceType2 = std::string>
     ::bioio::FastqRecord<StringType, SequenceType1, SequenceType2>
@@ -187,14 +187,14 @@ namespace detail
         StringType name;
         SequenceType1 seq;
         SequenceType2 quals;
-        
+
         // Unlike FASTA, FASTQ always use one line per field.
         std::getline(fastq, name);
         std::getline(fastq, seq);
         fastq.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::getline(fastq, quals);
-        
-        return ::bioio::FastqRecord<StringType, SequenceType1, SequenceType2> 
+
+        return ::bioio::FastqRecord<StringType, SequenceType1, SequenceType2>
                 {std::move(name), std::move(seq), std::move(quals)};
     }
 } // namespace detail
@@ -205,7 +205,7 @@ namespace detail
 
 inline std::size_t count_contigs_in_fasta_index(std::istream& fasta_index)
 {
-    return std::count(std::istreambuf_iterator<char>(fasta_index), 
+    return std::count(std::istreambuf_iterator<char>(fasta_index),
                       std::istreambuf_iterator<char>(), '\n');
 }
 
@@ -296,7 +296,7 @@ inline std::size_t remaining_line_length(const ::bioio::FastaContigIndex& index,
 } // namespace detail
 
 template <typename SequenceType = std::string>
-SequenceType 
+SequenceType
 read_fasta_contig(std::istream& fasta, const FastaContigIndex& index,
                   const std::size_t begin, std::size_t length)
 {
@@ -613,7 +613,7 @@ template <typename StringType = std::string, typename SequenceType = std::string
 FastaReads<StringType, SequenceType>
 read_fasta_map(const std::string& path, const ReadIds<StringType>& names)
 {
-    return read_fasta_map(path, names, 
+    return read_fasta_map(path, names,
                           [] (StringType&& name) { return name; });
 }
 
@@ -715,7 +715,7 @@ std::vector<FastqRecord<StringType, SequenceType1, SequenceType2>>
 read_fastq(const std::string& path)
 {
     return read_fastq<StringType, SequenceType1, SequenceType2>(path, [] (const StringType& name) { return name; });
-}    
+}
 
 template <typename StringType = std::string, typename SequenceType1 = std::string,
           typename SequenceType2 = std::string>
@@ -730,8 +730,8 @@ template <typename StringType = std::string, typename SequenceType1 = std::strin
 std::vector<FastqRecord<StringType, SequenceType1, SequenceType2>>
 read_fastq(std::istream& fastq, const std::size_t num_records)
 {
-    return read_fastq<StringType, SequenceType1, SequenceType2>(fastq, num_records, [] (const StringType& name) { 
-        return name; 
+    return read_fastq<StringType, SequenceType1, SequenceType2>(fastq, num_records, [] (const StringType& name) {
+        return name;
     });
 }
 
@@ -741,8 +741,8 @@ std::vector<FastqRecord<StringType, SequenceType1, SequenceType2>>
 read_fastq(const std::string& path, const std::size_t num_records)
 {
     std::ifstream fastq {path, std::ios::binary};
-    return read_fastq<StringType, SequenceType1, SequenceType2>(fastq, num_records, [] (const StringType& name) { 
-        return name; 
+    return read_fastq<StringType, SequenceType1, SequenceType2>(fastq, num_records, [] (const StringType& name) {
+        return name;
     });
 }
 
@@ -763,7 +763,7 @@ read_fastq_map(const std::string& path)
     }
     return {names, data};
 }
-    
+
 } // namespace bioio
 
 #endif
