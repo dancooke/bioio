@@ -125,22 +125,26 @@ using FastqReads = std::pair<ReadIds<StringType>, FastqMap<StringType, SequenceT
 
 namespace detail
 {
+    static constexpr char fasta_delim {'>'};
+    static constexpr char fastq_delim {'@'};
+
     // Counts the occurrences of record_delim that follow a newline '\n'
     inline size_t count_records(std::istream& is, const char record_delim)
     {
         const auto current_position = is.tellg();
         size_t result {};
-        while (is) {
-            if (is.peek() == record_delim) ++result;
-            is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        if (record_delim  == fastq_delim) {
+            result = std::count(std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>(), '\n')/4;
+        } else {
+            while (is) {
+                if (is.peek() == record_delim) ++result;
+                is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            }
         }
         is.clear();
         is.seekg(current_position, std::ios::beg);
         return result;
     }
-
-    static constexpr char fasta_delim {'>'};
-    static constexpr char fastq_delim {'@'};
 
     template <typename StringType = std::string, typename SequenceType = std::string>
     ::bioio::FastaRecord<StringType, SequenceType>
